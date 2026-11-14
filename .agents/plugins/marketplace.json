@@ -8,7 +8,7 @@
       "name": "visual-explainer",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./marketplace/visual-explainer"
       },
       "category": "Developer Tools"
     }

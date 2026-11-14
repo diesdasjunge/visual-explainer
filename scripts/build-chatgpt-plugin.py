@@ -46,4 +46,14 @@ def build(output):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", nargs="?", type=Path, default=ROOT / "dist" / "visual-explainer.zip")
-    build(parser.parse_args().output)
+    parser.add_argument("--marketplace", action="store_true", help="Also materialize the tracked marketplace package")
+    args = parser.parse_args()
+    build(args.output)
+    if args.marketplace:
+        import shutil
+        target = ROOT / "marketplace" / "visual-explainer"
+        if target.exists():
+            shutil.rmtree(target)
+        with zipfile.ZipFile(args.output) as archive:
+            archive.extractall(target)
+        print(f"Materialized {target}")

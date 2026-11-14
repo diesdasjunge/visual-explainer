@@ -14,7 +14,7 @@ It preserves the upstream renderer and design system under the MIT license.
 
 This repository is also a marketplace named `kiryll-visual-explainer`.
 Its `.agents/plugins/marketplace.json` points at the portable plugin at the
-repository root, including its OpenAI presentation and bundled skill.
+generated `marketplace/visual-explainer` directory, including its OpenAI presentation and bundled skill. Regenerate this directory with `python3 scripts/build-chatgpt-plugin.py --marketplace` before publishing plugin changes. It contains real files because the marketplace installer skips symlinks.
 
 For Codex desktop/CLI, register the moving `main` branch:
 

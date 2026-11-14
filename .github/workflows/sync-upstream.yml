@@ -50,7 +50,7 @@ jobs:
           npm run check:ask
           npm run check:machine
           npm run check:chatgpt
-          npm run build:chatgpt
+          python3 scripts/build-chatgpt-plugin.py --marketplace
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -63,6 +63,7 @@ jobs:
       - name: Publish validated merge
         if: steps.merge.outputs.changed == 'true'
         run: |
+          git add marketplace/visual-explainer
           git commit -m 'Sync validated upstream changes'
           git push origin HEAD:main
           echo 'Merged upstream after plugin checks passed.' >> "$GITHUB_STEP_SUMMARY"
