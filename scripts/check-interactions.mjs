@@ -57,7 +57,7 @@ try {
     const calls = await page.evaluate(() => window.nativeCalls);
     if (mode !== 'missing-method') {
       assert.equal(calls.length, 1);
-      assert.equal(calls[0].tag, mode === 'html-target' ? 'ARTICLE' : 'FIGURE');
+      assert.equal(calls[0].tag, mode === 'html-target' ? 'ARTICLE' : 'DIV');
       assert.equal(calls[0].options.metadata.element, mode === 'html-target' ? 'HTML card' : 'Source');
       assert.equal(calls[0].active, true, 'request must remain inside the user gesture');
       assert(calls[0].options.initialComment.length <= 240);
@@ -69,12 +69,19 @@ try {
   // These regressions must be caught by the shipped validator, not just this test runner.
   for (const [name, mutate] of [
     ['native context lost', s => s.replace('element: bound(label)', "element: 'wrong node'")],
-    ['SVG passed to HTML-only API', s => s.replace('part instanceof HTMLElement ? part : part.closest("figure")', 'part')],
+    ['SVG passed to HTML-only API', s => s.replace('annotationTarget(part, label);', 'part;')],
   ]) {
     const page = await browser.newPage();
     await page.setContent(mutate(make()).replace('playback animation ask', 'ask').replace('data-play>', 'data-unused>'));
     const result = await interactionChecks(page);
     assert(result.problems.some(p => p.includes('native annotation lost')), name);
+    await page.close(); count++;
+  }
+  {
+    const page = await browser.newPage();
+    await page.setContent(make().replace('const target = annotationTarget(part, label);', 'const target = part.closest("figure");').replace('playback animation ask', 'ask').replace('data-play>', 'data-unused>'));
+    const result = await interactionChecks(page);
+    assert(result.problems.some(p => p.includes('bounds do not match')), 'whole-figure annotation regression');
     await page.close(); count++;
   }
   // Both narrow and wide layouts, plus reduced motion: selection and replies remain usable.

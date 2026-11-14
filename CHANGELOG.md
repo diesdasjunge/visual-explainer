@@ -1,3 +1,8 @@
+## 0.15.7 — highlight the selected node
+
+- Target native annotations at the clicked SVG node using a transparent, non-intercepting HTML target inside the drawing.
+- Check native annotation bounds against the selected node and reject whole-figure regressions.
+
 ## 0.15.6 — native browser questions
 
 - Open the host's native annotation editor from figure “Ask about…” buttons, preserving selected-node context for SVG and HTML figures.

@@ -93,7 +93,7 @@ export async function interactionChecks(page, { capture = async () => {} } = {})
         // Exercise native handoff separately, with a recording host stub. No chat submission.
         await page.evaluate(() => {
           document.oai = { annotation: { request(target, options) {
-            window.__veNativeRequest = { html: target instanceof HTMLElement, connected: target.isConnected, options };
+            window.__veNativeRequest = { html: target instanceof HTMLElement, connected: target.isConnected, rect: target.getBoundingClientRect().toJSON(), options };
             return { accepted: true };
           } } };
           window.__veNativeRequest = null;
@@ -103,6 +103,8 @@ export async function interactionChecks(page, { capture = async () => {} } = {})
           await page.getByRole('button', { name: /^Ask about / }).click();
           const request = await page.evaluate(() => window.__veNativeRequest);
           if (!request?.html || !request.connected || request.options.metadata.element !== label || !request.options.initialComment.includes(label)) throw new Error('native annotation lost selected element context or valid HTML target');
+          const bounds = await part.boundingBox();
+          if (!bounds || ['x', 'y', 'width', 'height'].some(key => Math.abs(request.rect[key] - bounds[key]) > 2)) throw new Error('native annotation bounds do not match the selected node');
           if (await page.locator('.ve-pop, .ve-bar').count()) throw new Error('native annotation also created a local reply');
         } finally { await page.evaluate(() => { document.oai = undefined; }); }
 

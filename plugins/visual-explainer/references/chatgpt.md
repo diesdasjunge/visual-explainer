@@ -76,8 +76,9 @@ In the built-in browser on HTTPS or localhost, “Ask about…” uses
 `document.oai.annotation.request` when available. The host opens an editable
 annotation with the figure and selected node context; the reader saves and
 submits it to the chat. Acceptance is not delivery: never say a question was
-sent merely because the API returned `accepted: true`. SVG nodes use their HTML
-figure as the target and carry the exact node name/reference as metadata.
+sent merely because the API returned `accepted: true`. SVG nodes use a transparent HTML target inside the SVG, sized to the clicked
+node, and carry the exact node name/reference as metadata. The target follows
+the drawing’s viewBox scaling and scrolling without intercepting node clicks.
 
 Serve local artifacts on loopback and open the localhost URL in the built-in
 browser to enable this capability; file previews and ordinary browsers may not
