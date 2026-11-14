@@ -21,10 +21,11 @@ try {
     ['missing animation', s => s.replace('</head>', '<style>*{animation:none!important}</style></head>'), 'no running animation'],
     ['missing question handler', s => s.replace('window.veReply?.page();', ''), 'click-to-ask'],
     ['lost context', s => s.replace('where, part: label, text', "where, part: 'wrong target', text"), 'reply lost'],
+    ['squeezed mobile note', s => s.replace('playback animation ask', 'ask').replace('data-play>', 'data-unused>').replace('</head>', '<style>.r-row{grid-template-columns:1.5rem minmax(0,1fr) auto!important}.r-row .acts{grid-column:auto!important}</style></head>'), 'reply note column', false, 390],
     ['lost handoff', s => s.replace('await navigator.clipboard.writeText(msg.markdown)', 'await Promise.resolve()'), 'handoff did not preserve'],
   ];
-  for (const [name, mutate, expected, sendBack] of cases) {
-    const page = await browser.newPage({ viewport: { width: 1067, height: 900 } });
+  for (const [name, mutate, expected, sendBack, width = 1067] of cases) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
     await page.setContent(mutate(make(sendBack)));
     const result = await interactionChecks(page);
     if (expected) assert(result.problems.some(p => p.includes(expected)), `${name}: ${JSON.stringify(result)}`);

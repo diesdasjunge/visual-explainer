@@ -29,6 +29,10 @@ dialog.ve-respond::backdrop { background: rgb(5 10 16 / .55); }
 .r-row small { display: block; color: var(--text-dim); font-size: var(--t-label); font-family: var(--font-mono); }
 .r-row .st { font: 600 var(--t-label) var(--font-mono); color: var(--text-dim); }
 .r-row .acts { display: flex; gap: var(--s-2); }
+@media (max-width: 540px) {
+  .r-row { grid-template-columns: 1.5rem minmax(0, 1fr); }
+  .r-row .acts { grid-column: 2; flex-wrap: wrap; }
+}
 .r-md { font: var(--t-label)/1.55 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-1); padding: var(--s-3) var(--s-4); max-height: 18rem; overflow: auto; color: var(--text-dim); }
 .r-foot .sp { flex: 1; }
 .r-foot .primary { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }

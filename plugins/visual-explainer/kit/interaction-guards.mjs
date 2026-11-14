@@ -76,6 +76,11 @@ export async function interactionChecks(page, { capture = async () => {} } = {})
         await pop.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('button', { name: /^Reply \(/ }).click();
         const reply = page.getByRole('dialog', { name: 'Your reply' });
+        const readable = await reply.locator('.r-row').evaluateAll(rows => rows.every(row => {
+          const text = row.children[1];
+          return innerWidth > 540 || text.getBoundingClientRect().width >= row.getBoundingClientRect().width / 2;
+        }));
+        if (!readable) throw new Error('reply note column is squeezed by its action controls');
         const payload = await reply.locator('.r-md').textContent();
         if (!payload.includes(question) || !payload.includes(`› ${label} — ask:`)) throw new Error('reply lost the selected element or question');
         if (j === 0) await capture(`figure ${i + 1} reply preview`);

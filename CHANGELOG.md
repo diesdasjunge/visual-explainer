@@ -1,3 +1,8 @@
+## 0.15.5 — readable mobile replies
+
+- Place saved-note action buttons below the note on narrow screens so they do not squeeze the question into a thin column.
+- Guard the reply text's share of row width and regression-test the broken mobile layout.
+
 ## 0.15.4 — preserve interaction and alignment contracts
 
 - Validate declared row alignment without forcing asymmetric or stacked content into rows.

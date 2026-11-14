@@ -305,7 +305,7 @@ export async function lookAt(file, { sheet = true, launcher = launch } = {}) {
       await page.waitForTimeout(300);
       const metrics = await page.evaluate(measure, MIN_LABEL);
       result.widths[width] = metrics;
-      const stateChecks = async (state) => {
+      const stateChecks = async (state, stepperIndex) => {
         const label = `${width}px ${theme} ${state}`;
         const m = await page.evaluate(measure, MIN_LABEL);
         if (m.overflow) result.problems.push(`${label}: page-overflow: the page scrolls sideways`);
@@ -313,7 +313,12 @@ export async function lookAt(file, { sheet = true, launcher = launch } = {}) {
         note(await page.evaluate(inspect, null), label);
         result.problems.push(...(await page.evaluate(layoutGuards)).map(p => `${label}: ${p}`));
         result.problems.push(...(await page.evaluate(headings, MIN_HEADING_GAP)).map(p => `${label}: ${p}`));
-        if (sheet) {
+        if (sheet && stepperIndex !== undefined) {
+          const evidence = `${path.replace(/\.html?$/i, "")}.view-${result.sheets.length + 1}.png`;
+          await page.locator('.ve-steps').nth(stepperIndex).screenshot({ path: evidence });
+          result.sheets.push(evidence);
+          result.evidenceDetails[evidence] = { width, theme, state, kind: "stepper-crop" };
+        } else if (sheet) {
           // Viewport-sized tiles preserve readable text, actual clipping and ordinary below-fold content.
           const height = await page.evaluate(() => document.documentElement.scrollHeight);
           for (let y = 0; y < height; y += 800) {
@@ -329,7 +334,7 @@ export async function lookAt(file, { sheet = true, launcher = launch } = {}) {
       const counts = await page.locator(".ve-steps").evaluateAll(es => es.map(e => e.querySelectorAll(".ve-cap li").length));
       for (let r = 0; r < counts.length; r++) for (let k = 0; k < counts[r]; k++) {
         if (!await page.evaluate(goStep, [r,k])) throw new Error(`Cannot inspect step ${r}:${k}`);
-        await page.waitForTimeout(60); await stateChecks(`stepper ${r+1} step ${k+1}`);
+        await page.waitForTimeout(60); await stateChecks(`stepper ${r+1} step ${k+1}`, r);
       }
       const interactions = await interactionChecks(page, { capture: async state => {
         if (!sheet) return;
