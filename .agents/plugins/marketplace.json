@@ -1,0 +1,16 @@
+{
+  "name": "kiryll-visual-explainer",
+  "interface": {
+    "displayName": "Kiryll\u2019s Visual Explainer"
+  },
+  "plugins": [
+    {
+      "name": "visual-explainer",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

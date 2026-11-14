@@ -10,6 +10,43 @@ It preserves the upstream renderer and design system under the MIT license.
 
 ## ChatGPT plugin
 
+### GitHub marketplace and updates
+
+This repository is also a marketplace named `kiryll-visual-explainer`.
+Its `.agents/plugins/marketplace.json` points at the portable plugin at the
+repository root, including its OpenAI presentation and bundled skill.
+
+For Codex desktop/CLI, register the moving `main` branch:
+
+```sh
+codex plugin marketplace add diesdasjunge/visual-explainer --ref main
+codex plugin add visual-explainer@kiryll-visual-explainer
+```
+
+Refresh the Git snapshot explicitly with:
+
+```sh
+codex plugin marketplace upgrade kiryll-visual-explainer
+```
+
+Client refresh behavior varies; this command provides an explicit refresh.
+The separately uploaded personal ChatGPT plugin does not follow GitHub.
+Avoid enabling both copies in the same chat.
+
+For automatic **daily ChatGPT workspace sync**, a workspace admin imports
+`https://github.com/diesdasjunge/visual-explainer` under **Admin → Plugins →
+Add → Import marketplace**, leaves Path empty, and selects branch `main`.
+Use **Sync now** for an immediate refresh. This imports a workspace plugin;
+the existing personal plugin cannot be migrated with a workspace `pluginId`.
+See [OpenAI’s GitHub sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management).
+
+Publish changes by committing and pushing to this fork's `main` branch.
+Bump plugin release versions together before a plugin release; run the checks
+below and `npm run check:versions`. Upstream changes must first be merged into
+this fork: subscribing to this marketplace does not automatically merge upstream.
+
+### Build an archive
+
 Build and verify the private plugin archive with Python 3 and Node.js 22.6+:
 
 ```sh
