@@ -32,6 +32,51 @@ try {
     else assert.deepEqual(result.problems, [], name);
     await page.close(); count++;
   }
+  // Native API acceptance is not delivery. Rejections and exceptions keep a usable fallback.
+  for (const mode of ['accepted', 'declined', 'throws', 'missing-method', 'truthy-object', 'html-target']) {
+    const page = await browser.newPage();
+    await page.setContent(make());
+    await page.evaluate(mode => {
+      window.nativeCalls = [];
+      document.oai = { annotation: { request(target, options) {
+        window.nativeCalls.push({ tag: target.tagName, options, active: navigator.userActivation.isActive });
+        if (mode === 'throws') throw new Error('host unavailable');
+        return mode === 'truthy-object' ? {} : { accepted: mode === 'accepted' || mode === 'html-target' };
+      } } };
+      if (mode === 'missing-method') document.oai.annotation = {};
+      if (mode === 'html-target') {
+        const card = document.createElement('article'); card.dataset.ref = 'card';
+        card.innerHTML = '<h3>HTML card</h3>'; document.querySelector('figure').append(card);
+      }
+    }, mode);
+    await page.locator(mode === 'html-target' ? 'article[data-ref]' : '.ve-n').first().click();
+    await page.getByRole('button', { name: /^Ask about / }).click();
+    const accepted = mode === 'accepted' || mode === 'html-target';
+    assert.equal(await page.locator('.ve-pop').count(), accepted ? 0 : 1, mode);
+    assert.equal(await page.locator('.ve-bar').count(), 0, 'opening native annotation must not create a saved reply');
+    const calls = await page.evaluate(() => window.nativeCalls);
+    if (mode !== 'missing-method') {
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].tag, mode === 'html-target' ? 'ARTICLE' : 'FIGURE');
+      assert.equal(calls[0].options.metadata.element, mode === 'html-target' ? 'HTML card' : 'Source');
+      assert.equal(calls[0].active, true, 'request must remain inside the user gesture');
+      assert(calls[0].options.initialComment.length <= 240);
+      assert(Object.values(calls[0].options.metadata).every(value => value.length <= 256));
+      assert(Buffer.byteLength(JSON.stringify(calls[0].options.metadata)) <= 2048);
+    }
+    await page.close(); count++;
+  }
+  // These regressions must be caught by the shipped validator, not just this test runner.
+  for (const [name, mutate] of [
+    ['native context lost', s => s.replace('element: bound(label)', "element: 'wrong node'")],
+    ['SVG passed to HTML-only API', s => s.replace('part instanceof HTMLElement ? part : part.closest("figure")', 'part')],
+  ]) {
+    const page = await browser.newPage();
+    await page.setContent(mutate(make()).replace('playback animation ask', 'ask').replace('data-play>', 'data-unused>'));
+    const result = await interactionChecks(page);
+    assert(result.problems.some(p => p.includes('native annotation lost')), name);
+    await page.close(); count++;
+  }
   // Both narrow and wide layouts, plus reduced motion: selection and replies remain usable.
   for (const width of [390, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });

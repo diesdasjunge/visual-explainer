@@ -5,6 +5,8 @@ export async function interactionChecks(page, { capture = async () => {} } = {})
   page.setDefaultTimeout(2000);
   await page.evaluate(() => {
     window.__veValidationDeliveries = [];
+    // Never reach a real host annotation editor during automated validation.
+    Object.defineProperty(document, "oai", { configurable: true, writable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
       writeText: async text => window.__veValidationDeliveries.push({ channel: 'copy', text })
     } });
@@ -88,6 +90,22 @@ export async function interactionChecks(page, { capture = async () => {} } = {})
         const delivered = await page.evaluate(() => window.__veValidationDeliveries.at(-1)?.text);
         if (delivered !== payload) throw new Error('handoff did not preserve the reply payload');
         if (await page.getByRole('button', { name: /^Reply \(/ }).count()) throw new Error('successful handoff did not clear submitted notes');
+        // Exercise native handoff separately, with a recording host stub. No chat submission.
+        await page.evaluate(() => {
+          document.oai = { annotation: { request(target, options) {
+            window.__veNativeRequest = { html: target instanceof HTMLElement, connected: target.isConnected, options };
+            return { accepted: true };
+          } } };
+          window.__veNativeRequest = null;
+        });
+        try {
+          await part.click();
+          await page.getByRole('button', { name: /^Ask about / }).click();
+          const request = await page.evaluate(() => window.__veNativeRequest);
+          if (!request?.html || !request.connected || request.options.metadata.element !== label || !request.options.initialComment.includes(label)) throw new Error('native annotation lost selected element context or valid HTML target');
+          if (await page.locator('.ve-pop, .ve-bar').count()) throw new Error('native annotation also created a local reply');
+        } finally { await page.evaluate(() => { document.oai = undefined; }); }
+
       }
     });
   }

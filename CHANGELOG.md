@@ -1,3 +1,9 @@
+## 0.15.6 — native browser questions
+
+- Open the host's native annotation editor from figure “Ask about…” buttons, preserving selected-node context for SVG and HTML figures.
+- Keep local questions as the fallback for absent, declined or failing annotation APIs; never treat editor acceptance as message delivery.
+- Validate native target/context and duplicate-free handoff, with regression cases for host acceptance, denial, exceptions and malformed results.
+
 ## 0.15.5 — readable mobile replies
 
 - Place saved-note action buttons below the note on narrow screens so they do not squeeze the question into a thin column.

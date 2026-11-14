@@ -50,7 +50,7 @@ div.ve-sel { display: flex; gap: var(--s-1); padding: 0; box-shadow: none; } div
 `));
 
   const toast = (msg) => { const t = h("div", { class: "ve-toast", role: "status" }, msg); document.body.append(t); setTimeout(() => t.remove(), 1800); };
-  // only a page Pi opened in Glimpse has someone listening; anywhere else the reply is copied
+  // Collected replies use Pi/Glimpse or copy. Native annotations open separately from a user click.
   const canSend = () => !!$("[data-send-back]") && typeof window.glimpse?.send === "function";
   async function deliver(msg) {
     if (canSend()) { window.glimpse.send({ type: "visual-explainer:response", ...msg }); toast("Sent to the agent"); return "sent"; }
@@ -64,6 +64,24 @@ div.ve-sel { display: flex; gap: var(--s-1); padding: 0; box-shadow: none; } div
     }
     toast("Copied. Paste it to the agent.");
     return "copied";
+  }
+
+  // The native host owns editing and submission. accepted means queued, never sent.
+  // request() accepts HTML elements or Ranges, not SVG nodes; use the containing
+  // figure for SVG and attach the precise selected part as bounded metadata.
+  function nativeQuestion(part, { where, label, title, file }) {
+    const annotation = document.oai?.annotation;
+    if (typeof annotation?.request !== "function") return false;
+    const target = part instanceof HTMLElement ? part : part.closest("figure");
+    if (!target) return false;
+    // Five values at 128 UTF-16 units also fit the host’s 2,048-byte JSON limit.
+    const bound = value => String(value).slice(0, 128);
+    try {
+      return annotation.request(target, {
+        initialComment: `Ask about “${label}”`.slice(0, 240),
+        metadata: { figure: bound(where), element: bound(label), reference: bound(part.dataset.ref || ""), page: bound(title), file: bound(file) }
+      })?.accepted === true;
+    } catch { return false; } // denied/unavailable hosts retain the local question editor
   }
 
   /* one note popover at a time: a comment, or a question for the agent */
@@ -221,6 +239,7 @@ div.ve-sel { display: flex; gap: var(--s-1); padding: 0; box-shadow: none; } div
       askBtn.addEventListener("click", () => {
         const rect = askBtn.getBoundingClientRect();
         askBtn.remove(); askBtn = null;
+        if (nativeQuestion(part, { where, label, title, file })) return;
         note({ rect, ref: `${where} › ${label}`, ask: true, onSave: (text) => add({ kind: "ask", where, part: label, text }) });
       });
       document.body.append(askBtn);
