@@ -103,7 +103,8 @@ export async function interactionChecks(page, { capture = async () => {} } = {})
           await page.getByRole('button', { name: /^Ask about / }).click();
           const request = await page.evaluate(() => window.__veNativeRequest);
           if (!request?.html || !request.connected || request.options.metadata.element !== label || !request.options.initialComment.includes(label)) throw new Error('native annotation lost selected element context or valid HTML target');
-          const bounds = await part.boundingBox();
+          // Use the same DOM geometry as the target; Playwright boundingBox adds SVG stroke extents.
+          const bounds = await part.evaluate(el => el.getBoundingClientRect().toJSON());
           if (!bounds || ['x', 'y', 'width', 'height'].some(key => Math.abs(request.rect[key] - bounds[key]) > 2)) throw new Error('native annotation bounds do not match the selected node');
           if (await page.locator('.ve-pop, .ve-bar').count()) throw new Error('native annotation also created a local reply');
         } finally { await page.evaluate(() => { document.oai = undefined; }); }

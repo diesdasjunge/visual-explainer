@@ -14,6 +14,7 @@ try {
   const cases = [
     ['working copy handoff', s => s, null],
     ['working direct handoff', s => s, null, true],
+    ['thick SVG strokes retain node bounds', s => s.replace('playback animation ask', 'ask').replace('data-play>', 'data-unused>').replace('</head>', '<style>.ve-n .sh{stroke-width:20px!important}</style></head>'), null],
     ['missing play control', s => s.replace('data-play>', 'data-unused>'), 'playback'],
     ['missing target', s => s.replace('data-ref="two"', 'data-ref="other"'), 'required ask target'],
     ['inert play handler', s => s.replace("play?.addEventListener('click'", "play?.addEventListener('unused'"), 'Play does not restart'],

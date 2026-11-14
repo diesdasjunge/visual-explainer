@@ -1,3 +1,8 @@
+## 0.15.8 — consistent SVG annotation measurements
+
+- Compare native target and selected node with the same DOM rectangle API; Playwright’s SVG bounding box also includes stroke extents.
+- Add a valid thick-stroke case while retaining the negative whole-figure highlight test.
+
 ## 0.15.7 — highlight the selected node
 
 - Target native annotations at the clicked SVG node using a transparent, non-intercepting HTML target inside the drawing.
