@@ -51,7 +51,7 @@ The kit already styles plain HTML, so a page adds none of it: a section's paragr
 | KPI strip | `.kpis` › `.kpi`: `<span class="ve-label">Hit rate</span><span class="val"><span data-count="94">94</span><span class="unit">%</span></span>` + a data tag; `data-count` counts up |
 | Small multiples | `.cases` › `<div class="case" data-st="ok\|warn\|risk">`: a chip, `<h3>`, `<svg class="ve-mini" viewBox="0 0 240 128">`; changed parts `.is-st`, a missing part `.is-off` |
 | Chips | `<span class="chip ok\|warn\|risk">word</span>` |
-| Section nav | 4+ sections: `<nav class="ve-toc" aria-label="Sections"><div><a href="#load">Load</a>…</div><span class="pos"></span></nav>` before `<main>`; the section in view is marked and counted |
+| Section nav | 4+ sections: `<nav class="ve-toc" aria-label="Sections"><div><a href="#load">Load</a>…</div><span class="pos"></span></nav>` before `<main>`; links wrap, the counter has its own column, anchor offsets follow the measured bar height, and the section in view is marked and counted |
 | Linked highlighting | `data-ref="redis"` on any part; a prose term is `<span class="ve-ref" data-ref="redis" tabindex="0">` (`diagrams.md`) |
 | Stepper, replay, callouts, dimensions, flow dots | `.ve-steps` with `data-s`, `.ve-tok`, `.ve-at`, `.ve-vals` (`motion.md`); `.ve-co`, `.ve-dim`, `data-flow` (`diagrams.md`) |
 

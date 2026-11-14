@@ -1,3 +1,10 @@
+## 0.15.9 — composition-safe layout and navigation
+
+- Give header/figure compositions positive spacing in both grids and nested sections; detect figures overlapping their introductions.
+- Wrap section links, reserve the counter column, and measure sticky navigation height for anchor offsets.
+- Compare only painted text inside scrollports when checking collisions, while still rejecting visible overlaps and clipped required text.
+- Add valid/broken layout pairs and real kit regressions across four widths and 100%/200% text sizes.
+
 ## 0.15.8 — consistent SVG annotation measurements
 
 - Compare native target and selected node with the same DOM rectangle API; Playwright’s SVG bounding box also includes stroke extents.

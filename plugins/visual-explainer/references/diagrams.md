@@ -85,7 +85,7 @@ A number that does not measure a span gets a small chart beside it: `<ve-waffle>
 
 ## Page structure for 4+ sections
 
-A kit `<nav class="ve-toc">` before `<main>` (`kit.md`), one link per section `id`. The kit makes it sticky, scrolls it sideways on a phone, and marks the section in view.
+A kit `<nav class="ve-toc">` before `<main>` (`kit.md`), one link per section `id`. The kit makes it sticky, wraps links on narrow screens, reserves space for the counter, and marks the section in view.
 
 ## Other shapes
 

@@ -27,6 +27,10 @@ try {
         ['scrolling code', `<pre style="width:180px;overflow:auto">${text}</pre>`, null],
         ['clipped text', `<p style="width:180px;overflow:hidden;white-space:nowrap">${text}</p>`, 'text-clipping'],
         ['flexible grid', `<section style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><article style="min-width:0"><pre style="overflow:auto">${text}</pre></article><article><p>Other column</p></article></section>`, null],
+        ['separated header and figure', '<header>Introduction</header><figure style="height:80px;margin:20px 0;background:#eee"></figure>', null],
+        ['figure covers header', '<header>Introduction</header><figure style="height:80px;margin:-12px 0 0;background:#eee"></figure>', 'block-overlap'],
+        ['offscreen text beside counter', '<div style="display:flex;width:220px"><div style="width:160px;overflow:auto;white-space:nowrap">A very long navigation label outside the scrollport</div><span>1 / 6</span></div>', null],
+        ['visible text covers counter', '<div style="position:relative;width:220px"><div style="width:160px;overflow:auto;white-space:nowrap">A very long navigation label outside the scrollport</div><span style="position:absolute;left:60px;top:0">1 / 6</span></div>', 'text-overlap'],
         ['normal blocks', '<p>First paragraph</p><p>Second paragraph</p>', null],
         ['overlapping blocks', '<p>First paragraph</p><p style="position:absolute;top:24px">Second paragraph</p>', 'text-overlap'],
         ['declared overlay', '<div data-ve-overlap-reason="Layered annotation demonstration"><p>First paragraph</p><p style="position:absolute;top:24px">Second paragraph</p></div>', null],
@@ -54,6 +58,31 @@ try {
   for (const font of ['serif', 'monospace', 'MissingFixtureFont, sans-serif']) {
     await page.setContent(html(`<p style="font-family:${font};font-size:200%;overflow-wrap:anywhere">${'Wide word '.repeat(20)}</p>`));
     assert.deepEqual(await page.evaluate(layoutGuards), []); checks++;
+  }
+  // Real kit CSS, varied composition and enlarged text; no page-specific overrides.
+  const kitCss = readFileSync(join(skill, 'kit/kit.css'), 'utf8').replace(/@import[^;]+;/g, '');
+  for (const width of [390, 768, 1067, 1280]) for (const scale of [100, 200]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const nested of [false, true]) {
+      const content = '<header><h1>A longer introduction that wraps</h1><p>Supporting metadata with several words</p></header><figure style="height:100px;background:#ddd"><figcaption>A figure</figcaption></figure>';
+      await page.setContent(`<!doctype html><style>${kitCss}html{font-size:${17*scale/100}px}</style><main>${nested ? '<section>'+content+'</section>' : content}</main>`);
+      assert.deepEqual(await page.evaluate(layoutGuards), [], `kit header ${width}/${scale}/${nested}`);
+      assert(await page.evaluate(() => document.querySelector('figure').getBoundingClientRect().top > document.querySelector('header').getBoundingClientRect().bottom));
+      checks++;
+    }
+    const labels = ['Overview', 'Astronomical calculations', 'Activations', 'Bodygraph', 'Fixing rules', 'Composites'];
+    await page.setContent(`<!doctype html><style>${kitCss}html{font-size:${17*scale/100}px}</style><nav class="ve-toc"><div>${labels.map((x,i)=>`<a href="#s${i}">${x}</a>`).join('')}</div><span class="pos">6 / 6</span></nav><main>${labels.map((x,i)=>`<section id="s${i}" style="min-height:600px"><h2>${x}</h2></section>`).join('')}</main>`);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.addScriptTag({ content: readFileSync(join(skill, 'kit/kit.js'), 'utf8') });
+    await page.waitForFunction(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ve-toc-height')) > 0);
+    assert.deepEqual(await page.evaluate(layoutGuards), [], `kit navigation ${width}/${scale}`);
+    assert(await page.evaluate(() => {
+      const counter = document.querySelector('.pos').getBoundingClientRect();
+      return [...document.querySelectorAll('.ve-toc a')].every(a => a.getBoundingClientRect().right <= counter.left);
+    }));
+    await page.locator('.ve-toc a').nth(3).click();
+    assert(await page.evaluate(() => document.querySelector('#s3').getBoundingClientRect().top >= document.querySelector('.ve-toc').getBoundingClientRect().bottom - 2), 'anchor clears wrapped sticky nav');
+    checks++;
   }
   await browser.close(); browser = null;
   const file = join(temp, 'valid.html');

@@ -50,6 +50,9 @@ for (const root of document.querySelectorAll('.ve-steps')) {
 
 // Section nav: the link of the section in view gets aria-current, and .pos counts it.
 for (const nav of document.querySelectorAll('.ve-toc')) {
+  const sizeNav = () => document.documentElement.style.setProperty('--ve-toc-height', `${nav.getBoundingClientRect().height}px`);
+  new ResizeObserver(sizeNav).observe(nav);
+  sizeNav();
   const links = [...nav.querySelectorAll('a[href^="#"]')], pos = nav.querySelector('.pos');
   const targets = links.map((a) => {
     const t = document.getElementById(decodeURIComponent(a.hash.slice(1)));

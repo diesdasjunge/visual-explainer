@@ -39,6 +39,15 @@ export function layoutGuards() {
       }
     }
   }
+  // Catch a figure backing into its introduction even when their text does not intersect.
+  for (const figure of document.querySelectorAll('header + figure')) {
+    const header = figure.previousElementSibling;
+    if (!visible(header) || !visible(figure)) continue;
+    const a = header.getBoundingClientRect(), b = figure.getBoundingClientRect();
+    if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 &&
+        Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2)
+      found.add(`block-overlap: ${name(figure)} intersects its header`);
+  }
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const lines = [];
   while (walker.nextNode()) {
@@ -55,7 +64,24 @@ export function layoutGuards() {
       // Scrolling is an intentional alternative to wrapping. Do not compare offscreen text to outer clipping boundaries.
       if (/auto|scroll/.test(cs.overflowX + cs.overflowY)) break;
     }
-    for (const b of boxes) lines.push({ e, b });
+    // Collision checks use painted text only. Scrollable text outside its scrollport
+    // must not collide with siblings, but visible collisions still fail.
+    for (const rect of boxes) {
+      const b = { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+      for (let p = e; p && p !== document.body; p = p.parentElement) {
+        const cs = getComputedStyle(p), r = p.getBoundingClientRect();
+        if (/auto|scroll|hidden|clip/.test(cs.overflowX)) {
+          b.left = Math.max(b.left, r.left + p.clientLeft);
+          b.right = Math.min(b.right, r.left + p.clientLeft + p.clientWidth);
+        }
+        if (/auto|scroll|hidden|clip/.test(cs.overflowY)) {
+          b.top = Math.max(b.top, r.top + p.clientTop);
+          b.bottom = Math.min(b.bottom, r.top + p.clientTop + p.clientHeight);
+        }
+      }
+      b.height = b.bottom - b.top;
+      if (b.right - b.left > 1 && b.height > 1) lines.push({ e, b });
+    }
   }
   // Detect overlapping text from distinct blocks, not inline emphasis, or declared visual overlays.
   lines.sort((a,b) => a.b.top - b.b.top);
