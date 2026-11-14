@@ -9,7 +9,7 @@ const receiptPath = file => `${resolve(file)}.validation.json`;
 export function recordValidation(file, result) {
   const report = { schema: 1, file: resolve(file), sha256: hash(file), ready: false,
     automated: result.skipped ? 'unverified' : result.problems.length ? 'failed' : 'passed',
-    reason: result.skipped, problems: result.problems, visualReview: { status: 'unverified' },
+    interactions: result.interactions ?? [], reason: result.skipped, problems: result.problems, visualReview: { status: 'unverified' },
     evidence: result.sheets.map(path => ({ path: resolve(path), sha256: hash(path), ...result.evidenceDetails?.[path] })) };
   writeFileSync(receiptPath(file), JSON.stringify(report, null, 2) + '\n');
   return report;

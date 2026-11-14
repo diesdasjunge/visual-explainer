@@ -21,5 +21,7 @@ jobs:
           npm run check:machine
           npm run check:chatgpt
           npm run check:layout
+          npm run check:interactions
           python3 scripts/build-chatgpt-plugin.py --marketplace
           node scripts/check-layout.mjs marketplace/visual-explainer/skills/visual-explainer
+          node scripts/check-interactions.mjs marketplace/visual-explainer/skills/visual-explainer

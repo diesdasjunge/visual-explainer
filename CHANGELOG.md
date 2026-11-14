@@ -1,3 +1,10 @@
+## 0.15.4 — preserve interaction and alignment contracts
+
+- Validate declared row alignment without forcing asymmetric or stacked content into rows.
+- Exercise playback, animation, scrubbing, element-specific questions, saved context and intercepted reply handoff on generated pages.
+- Add positive/negative alignment and interaction regressions for source and marketplace packages.
+- Require capability preservation during layout repairs and capture interaction evidence for review.
+
 ## 0.15.3 — mandatory layout validation
 
 - Require browser checks and recorded visual review before finished HTML delivery; skipped checks and draft renders remain unverified.

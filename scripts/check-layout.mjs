@@ -33,6 +33,12 @@ try {
         ['inline emphasis', '<p>Readable <strong>inline emphasis</strong> in a sentence.</p>', null],
         ['fitting node', '<svg width="300" height="100"><g class="ve-n"><rect class="sh" width="140" height="64" fill="#eee"/><text x="8" y="30">Short label</text></g></svg>', null],
         ['escaped node', `<svg width="300" height="100"><g class="ve-n"><rect class="sh" width="140" height="64" fill="#eee"/><text x="8" y="30">${text}</text></g></svg>`, 'node-containment'],
+        ['aligned rows', '<div data-ve-align="divider" style="display:flex;gap:20px"><div data-ve-align-cell><p>A</p><hr data-ve-align-anchor="divider"></div><div data-ve-align-cell><p>B</p><hr data-ve-align-anchor="divider"></div></div>', null],
+        ['unequal divider heights', '<div data-ve-align="divider" style="display:flex;gap:20px"><div data-ve-align-cell><p>A</p><hr data-ve-align-anchor="divider"></div><div data-ve-align-cell><p>B<br>Extra line</p><hr data-ve-align-anchor="divider"></div></div>', 'alignment'],
+        ['offset column', '<div data-ve-align="heading" style="display:flex;gap:20px"><div data-ve-align-cell style="height:100px"><p data-ve-align-anchor="heading">A</p></div><div data-ve-align-cell style="height:100px;margin-top:16px"><p data-ve-align-anchor="heading">B</p></div></div>', 'alignment'],
+        ['intentional asymmetry', '<div style="display:flex;gap:20px"><div><p>A</p><hr></div><div><p>B<br>Extra line</p><hr></div></div>', null],
+        ['stacked responsive cells', '<div data-ve-align="divider"><div data-ve-align-cell><p>A</p><hr data-ve-align-anchor="divider"></div><div data-ve-align-cell><p>B<br>Extra line</p><hr data-ve-align-anchor="divider"></div></div>', null],
+        ['missing row anchor', '<div data-ve-align="divider" style="display:flex;gap:20px"><div data-ve-align-cell><p>A</p><hr data-ve-align-anchor="divider"></div><div data-ve-align-cell><p>B</p></div></div>', 'alignment'],
         ['hidden alternative', `<p hidden>${text}</p><p>Visible alternative</p>`, null],
       ];
       for (const [name, body, expected] of cases) {

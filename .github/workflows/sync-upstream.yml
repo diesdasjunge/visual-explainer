@@ -49,6 +49,7 @@ jobs:
           export VE_BROWSER_RUNTIME="$RUNNER_TEMP/ve-browser"
           "$VE_BROWSER_RUNTIME/node_modules/.bin/playwright-core" install --with-deps chromium
           npm run check:layout
+          npm run check:interactions
           npm run check:versions
           npm run check:kit
           npm run check:ask
@@ -56,6 +57,7 @@ jobs:
           npm run check:chatgpt
           python3 scripts/build-chatgpt-plugin.py --marketplace
           node scripts/check-layout.mjs marketplace/visual-explainer/skills/visual-explainer
+          node scripts/check-interactions.mjs marketplace/visual-explainer/skills/visual-explainer
           python3 - <<'PY'
           import json
           from pathlib import Path

@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a browser to view generated HTML files. Optional surf-cli for AI image generation.
 metadata:
   author: nicobailon
-  version: "0.15.3"
+  version: "0.15.4"
 ---
 
 # Visual Explainer
@@ -86,6 +86,12 @@ Exact, calm, visual, and specific to the subject: someone who understands the sy
 
 - **On the page, wherever it helps, unasked:** steppers, scene players, replays, flow dots, live figures (`references/motion.md`). Script first: one claim per step; the picture changes with every sentence.
 - **Video file** (`/generate-video`, MP4), only on request: `references/video.md`, rendered with `visual-explainer-video` (or `npx -y -p visual-explainer -p playwright-core visual-explainer-video`).
+
+## Preserve capabilities during repairs
+
+A layout repair must preserve the figure's intended behavior. Do not replace an animated, selectable diagram with static cards to make validation easier. Use `data-ve-requires="playback animation ask"` on animated figures and `data-ve-ask-targets="source target"` to name required `data-ref` targets. The validator exercises the actual playback, question editor and reply handoff with delivery intercepted. Every meaningful graph element must remain selectable; for HTML elements use `data-ref` with a meaningful `h3` label, and for SVG use `.ve-n` with readable text.
+
+For repeated columns intended to align, declare `data-ve-align="heading divider"` on the layout container, `data-ve-align-cell` on each cell, and matching `data-ve-align-anchor="heading"` / `"divider"` on its elements. Alignment is checked within each visual row, so mobile stacks remain valid. Do not add this contract to deliberately asymmetric compositions. Fix reusable component/validator issues in canonical plugin source and cover both valid and broken cases; do not count an artifact-only repair as a plugin fix.
 
 ## Before delivery
 

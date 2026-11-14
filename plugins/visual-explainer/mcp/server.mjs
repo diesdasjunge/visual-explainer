@@ -51,6 +51,7 @@ const renderOutputSchema = z.object({
     schema: z.number(), file: z.string(), sha256: z.string(), ready: z.boolean(),
     automated: z.enum(["passed", "failed", "unverified"]), reason: z.string().optional(),
     problems: z.array(z.string()),
+    interactions: z.array(z.object({ width: z.number(), theme: z.string(), checks: z.array(z.string()) })).optional(),
     visualReview: z.object({ status: z.string() }).passthrough(),
     evidence: z.array(z.object({ path: z.string(), sha256: z.string() }).passthrough()),
   }),

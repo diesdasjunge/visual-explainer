@@ -1,6 +1,7 @@
 // Opens a rendered kit page in headless Chrome and looks at it the way a reader would, so the agent does not script its own browser:
 // script errors, sideways scrolling, labels under 12 px, text that overlaps or runs out of its drawing, headings that sit on what
 // follows, every stepper step, and viewport evidence of the complete page and steps. Browser validation is required for delivery.
+import { interactionChecks } from "./interaction-guards.mjs";
 import { layoutGuards } from "./layout-guards.mjs";
 import { createRequire } from "node:module";
 import { readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -330,6 +331,15 @@ export async function lookAt(file, { sheet = true, launcher = launch } = {}) {
         if (!await page.evaluate(goStep, [r,k])) throw new Error(`Cannot inspect step ${r}:${k}`);
         await page.waitForTimeout(60); await stateChecks(`stepper ${r+1} step ${k+1}`);
       }
+      const interactions = await interactionChecks(page, { capture: async state => {
+        if (!sheet) return;
+        const evidence = `${path.replace(/\.html?$/i, "")}.view-${result.sheets.length + 1}.png`;
+        await page.screenshot({ path: evidence }); result.sheets.push(evidence);
+        result.evidenceDetails[evidence] = { width, theme, state, kind: "interaction" };
+      } });
+      result.problems.push(...interactions.problems.map(p => `${width}px ${theme}: ${p}`));
+      result.interactions ??= [];
+      result.interactions.push({ width, theme, checks: interactions.checks });
       await page.close();
     }
 

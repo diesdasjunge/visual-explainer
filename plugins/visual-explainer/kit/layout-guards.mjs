@@ -12,6 +12,33 @@ export function layoutGuards() {
     for (const t of node.querySelectorAll('text')) if (visible(t) && outside(t.getBoundingClientRect(), box))
       found.add(`node-containment: ${name(t)} escapes its node`);
   }
+  // An explicit contract, scoped to a repeated layout. Compare only cells on the
+  // same visual row so responsive stacks and deliberately asymmetric layouts remain valid.
+  for (const group of document.querySelectorAll('[data-ve-align]')) {
+    const cells = [...group.querySelectorAll('[data-ve-align-cell]')].filter(e =>
+      e.closest('[data-ve-align]') === group && visible(e));
+    const rows = [];
+    for (const cell of cells) {
+      const box = cell.getBoundingClientRect();
+      let row = rows.find(r => {
+        const a = r.box;
+        const overlap = Math.min(a.bottom, box.bottom) - Math.max(a.top, box.top);
+        return (box.left >= a.right - 2 || box.right <= a.left + 2) && overlap > Math.min(a.height, box.height) / 2;
+      });
+      if (!row) rows.push(row = { box, cells: [] });
+      row.cells.push(cell);
+    }
+    for (const row of rows.filter(r => r.cells.length > 1)) {
+      for (const key of group.dataset.veAlign.trim().split(/\s+/).filter(Boolean)) {
+        const marks = row.cells.map(cell => [...cell.querySelectorAll('[data-ve-align-anchor]')]
+          .find(e => e.dataset.veAlignAnchor === key && visible(e)));
+        if (marks.some(e => !e)) { found.add(`alignment: missing "${key}" anchor in repeated row`); continue; }
+        const tops = marks.map(e => e.getBoundingClientRect().top);
+        if (Math.max(...tops) - Math.min(...tops) > 2)
+          found.add(`alignment: "${key}" differs by ${Math.round(Math.max(...tops)-Math.min(...tops))}px across repeated row`);
+      }
+    }
+  }
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const lines = [];
   while (walker.nextNode()) {
