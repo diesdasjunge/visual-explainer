@@ -1,12 +1,41 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "visual-explainer",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Generate beautiful HTML pages for diagrams, diff reviews, plan reviews, slides, and data tables",
   "author": {
     "name": "nicobailon"
   },
-  "repository": "https://github.com/nicobailon/visual-explainer",
+  "repository": "https://github.com/diesdasjunge/visual-explainer",
   "license": "MIT",
-  "keywords": ["diagrams", "html", "visualization", "diff-review", "slides"]
+  "keywords": [
+    "diagrams",
+    "html",
+    "visualization",
+    "diff-review",
+    "slides"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Visual Explainer",
+        "shortDescription": "Complex ideas, made visual",
+        "longDescription": "Create styled HTML diagrams, comparisons, code and plan reviews, visual explanations, and slide decks from your conversation and available source files. Bundles the Visual Explainer renderer, design guides, and templates. Uses host file and execution tools; no hosted server or in-chat app view.",
+        "developerName": "diesdasjunge",
+        "category": "Developer Tools",
+        "capabilities": [],
+        "defaultPrompt": [
+          "Explain this as a visual HTML page.",
+          "Turn this architecture into an interactive diagram.",
+          "Compare these options visually."
+        ],
+        "logo": "./assets/icon.svg",
+        "composerIcon": "./assets/icon.svg",
+        "logoDark": "./assets/icon-dark.svg",
+        "composerIconDark": "./assets/icon-dark.svg",
+        "brandColor": "#1B6378",
+        "brandColorDark": "#8CD4D9"
+      }
+    }
+  }
 }

@@ -5,12 +5,16 @@ license: MIT
 compatibility: Requires a browser to view generated HTML files. Optional surf-cli for AI image generation.
 metadata:
   author: nicobailon
-  version: "0.15.0"
+  version: "0.15.1"
 ---
 
 # Visual Explainer
 
 Turn what you know into something a person understands in ten seconds. The default output is one HTML page whose spine is figures; text is caption, not content. Animate when motion helps the reader understand a process, a flow, a change of state, or cause and effect; keep what is static still.
+
+## ChatGPT and Codex
+
+Before writing or rendering in ChatGPT or Codex, read `references/chatgpt.md`. It sets host-appropriate output paths, artifact links, runtime fallbacks, and verification. Its delivery instructions take precedence over local paths and browser-opening steps below.
 
 ## Deliver
 

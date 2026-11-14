@@ -1,21 +1,23 @@
 {
   "name": "visual-explainer",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Agent skill that generates beautiful HTML pages for diagrams, diff reviews, plan reviews, slide decks, and data tables",
   "scripts": {
     "check:versions": "node scripts/check-versions.mjs",
     "check:kit": "node scripts/check-kit.mjs",
     "check:machine": "node scripts/check-machine.mjs",
-    "check:ask": "node scripts/check-ask.mjs"
+    "check:ask": "node scripts/check-ask.mjs",
+    "build:chatgpt": "python3 scripts/build-chatgpt-plugin.py",
+    "check:chatgpt": "python3 scripts/check-chatgpt-plugin.py"
   },
   "license": "MIT",
-  "homepage": "https://github.com/nicobailon/visual-explainer#readme",
+  "homepage": "https://github.com/diesdasjunge/visual-explainer#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nicobailon/visual-explainer.git"
+    "url": "git+https://github.com/diesdasjunge/visual-explainer.git"
   },
   "bugs": {
-    "url": "https://github.com/nicobailon/visual-explainer/issues"
+    "url": "https://github.com/diesdasjunge/visual-explainer/issues"
   },
   "keywords": [
     "agent-skill",

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Visual Explainer"
+  short_description: "Turn complex ideas into visuals"
+  default_prompt: "Use Visual Explainer to explain this as a visual HTML page."
+policy:
+  allow_implicit_invocation: true

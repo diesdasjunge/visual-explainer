@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.1] - 2026-11-14 (ChatGPT fork)
+
+- Add ChatGPT and Codex plugin presentation, light/dark icons, and brand colors.
+- Add host-aware artifact paths, delivery links, runtime fallbacks, and verification guidance.
+- Build a self-contained private plugin ZIP without the repository's skill symlink or local MCP configuration.
+- Verify rendering from the extracted package, including Mermaid, charts, and rejected invalid source.
+- Preserve the upstream renderer and MIT attribution.
+
 ## [0.15.0] - 2026-11-04
 
 ### Highlights

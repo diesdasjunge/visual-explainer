@@ -4,6 +4,40 @@
 
 # visual-explainer
 
+This fork adds an installable **ChatGPT and Codex plugin** to
+[nicobailon's Visual Explainer](https://github.com/nicobailon/visual-explainer).
+It preserves the upstream renderer and design system under the MIT license.
+
+## ChatGPT plugin
+
+Build and verify the private plugin archive with Python 3 and Node.js 22.6+:
+
+```sh
+npm run build:chatgpt
+npm run check:chatgpt
+```
+
+These commands do not need `npm install`. The ZIP is written to
+`dist/visual-explainer.zip`; its real `skills/visual-explainer/` directory
+contains the renderer, guides, templates, and command reference files. It has
+no symlinks, bundled dependencies, credentials, or marketplace wrappers.
+Use Plugin Creator to save this archive as a private plugin, then select
+**Visual Explainer** in ChatGPT or Codex. This is a skill plugin that uses the
+host's file and execution tools. It does not add MCP tools or an in-chat app view.
+
+Try “Explain this architecture as a visual HTML page,” “Compare these options
+visually,” or “Turn this plan into a step-by-step diagram.” ChatGPT receives
+instructions for downloadable artifact links; Codex uses a writable workspace
+or host visualization directory. The renderer needs Node; the skill explains
+how to deliver standalone HTML when Node is unavailable. HTML slides are
+included; PPTX, video, and browser layout checks need optional dependencies.
+
+Light and dark icons use the existing cube motif with teal, paper, and copper
+colors. The fork's package keeps upstream author attribution. See
+[the ChatGPT delivery guide](plugins/visual-explainer/references/chatgpt.md).
+
+## Upstream project
+
 **An agent skill that turns complex terminal output into styled HTML pages you actually want to read.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
