@@ -1,3 +1,11 @@
+## 0.15.3 — mandatory layout validation
+
+- Require browser checks and recorded visual review before finished HTML delivery; skipped checks and draft renders remain unverified.
+- Add general clipping, text-overlap and node-containment guards with intentional scrolling/overlay support.
+- Capture complete-page viewport evidence at narrow, intermediate and wide sizes in light/dark, including kit steps; bind review receipts to artifact/evidence hashes.
+- Add valid/broken browser regression coverage and run it for source and packaged skills in CI and upstream-sync validation.
+- Support a pinned browser runtime outside the immutable plugin cache.
+
 # Changelog
 
 ## [0.15.1] - 2026-11-14 (ChatGPT fork)

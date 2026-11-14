@@ -1,0 +1,33 @@
+# Mandatory layout validation and visual review
+
+A rendered file is a draft until automated browser checks **and** visual review pass. This applies to kit pages, standalone HTML, plans and slides. Never use missing dependencies, `--no-check`, or a successful source lint as permission to deliver unchecked output.
+
+## Runtime
+
+Use the checkout's Playwright installation, or install the pinned runtime in a writable host directory outside the installed plugin cache:
+
+```sh
+npm install --prefix /absolute/writable/ve-browser --no-save --ignore-scripts playwright-core@1.63.0
+export VE_BROWSER_RUNTIME=/absolute/writable/ve-browser
+"$VE_BROWSER_RUNTIME/node_modules/.bin/playwright-core" install chromium
+```
+
+Existing Google Chrome is also supported. Never modify the immutable plugin cache. If the host cannot execute a browser, report the blocker; the file remains an unverified draft.
+
+## Workflow
+
+1. Render with `node <skill-directory>/kit/render.mjs page.src.html`. This writes HTML and `page.html.validation.json`. Exit 1 means failed checks; exit 2 means unverified (including successful geometry awaiting visual review). `--no-check` is draft-only and also exits 2. `--lint` is source validation only.
+2. For existing standalone HTML, run `node <skill-directory>/kit/validation.mjs inspect page.html`.
+3. Fix automated findings in source and rerender. The checks cover page overflow, clipped text, block-text collisions, SVG node containment, existing diagram geometry and heading gaps. They run at 390, 1067 and 1280 pixels, light/dark, and kit stepper states. They are not full accessibility certification or proof of good composition.
+4. Inspect **every** evidence image listed in the receipt using the host's image tools. Full-page viewport tiles include ordinary content below the fold; extra diagram crops supplement them. Judge hierarchy, related-content grouping, spacing, readable labels, tree indentation, balanced columns and relevant states. Do not infer visual quality from the absence of automated findings. For non-kit controls or slide navigation, exercise and inspect their additional states using host browser tools before approving; built-in state traversal only covers kit steppers.
+5. Write a review JSON containing `reviewer`, `verdict: "passed"`, the full `inspected` image-path array, and substantive string observations for `hierarchy`, `spacing`, `readability`, `completePage`, and `states`. Record actual observations, never boilerplate or fabricated review. If problems remain, fix them and return to step 1.
+6. Run `node <skill-directory>/kit/validation.mjs review page.html review.json`, then `node <skill-directory>/kit/validation.mjs status page.html`. Only status exit 0 means ready. The receipt binds the review to SHA-256 hashes of the HTML and every evidence image. Editing either invalidates readiness; rerendering resets review.
+7. Deliver the HTML only after that gate. Keep source and receipt for revisions.
+
+The review record is an agent/reviewer attestation, not an automatic vision model or a security boundary. It prevents accidental omission and stale evidence; reviewers remain responsible for honest inspection. External resources can change independently of the HTML: use inline/bundled assets where practical and revalidate when they change.
+
+## Authoring and exemptions
+
+Use shrinkable grid tracks (`minmax(0, 1fr)`) and `min-width: 0` for items containing long code/URLs. Wrap prose; use intentional `overflow: auto` for code and wide diagrams. Keep prose margins off layout-container children. Labels must fit their owning diagram nodes at actual rendered font metrics; shorten, wrap or change the component rather than shrinking text below its readable minimum.
+
+Intentional HTML text overlays may use `data-ve-overlap-reason="specific explanation"` on the smallest enclosing element. This exempts only text-overlap detection, not clipping, node containment, page overflow or visual review. Do not use it to hide ordinary layout defects. Intentional scroll regions are allowed without an exemption. There is no blanket ban on long headings, asymmetric grids or generous whitespace: evaluate them in context.

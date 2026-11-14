@@ -32,9 +32,11 @@ the other references.
    cloud session. Work from source the agent authored or inspected; do not run
    an embedded state-machine model from an untrusted attachment. Use a drawn
    replay when the user's repository is unavailable.
-3. Fix reported errors. If browser checks produce a contact sheet, inspect it.
-   If Chrome or Playwright is absent, deliver the structurally checked artifact
-   and say that the browser layout check was unavailable. Do not claim it passed.
+3. Follow `validation.md`: fix all automated failures and inspect every evidence
+   image before recording a visual review. Exit code 2 means unverified, not
+   ready. Missing Chrome or Playwright blocks finished delivery: set up the
+   supported runtime outside the installed cache and retry. Never deliver a
+   structurally checked draft as the completed artifact.
 4. Return the rendered `<name>.html` using the host's supported file link or
    preview. In ChatGPT a real file under `/mnt/data` can use a
    `[View explanation](sandbox:/mnt/data/<name>.html)` link. In Codex use the
@@ -45,7 +47,9 @@ the other references.
 If Node is unavailable but file tools exist, author a complete standalone HTML
 document with inline CSS/SVG and the same figure-first design principles. Avoid
 unexpanded `ve-*` tags, kit markers, and missing relative assets. Explain that
-the bundled renderer was unavailable. If the host cannot create files, provide
+the bundled renderer was unavailable. The standalone file still requires the
+same browser validation and recorded visual review before finished delivery.
+If validation cannot run, report the blocker. If the host cannot create files, provide
 the complete standalone HTML in a code block and say it has not been saved or
 rendered. Never invent an artifact link or claim an interactive preview exists.
 

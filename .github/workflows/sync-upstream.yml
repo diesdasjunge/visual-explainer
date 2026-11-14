@@ -45,12 +45,17 @@ jobs:
         if: steps.merge.outputs.changed == 'true'
         run: |
           set -eu
+          npm install --prefix "$RUNNER_TEMP/ve-browser" --no-save --ignore-scripts playwright-core@1.63.0
+          export VE_BROWSER_RUNTIME="$RUNNER_TEMP/ve-browser"
+          "$VE_BROWSER_RUNTIME/node_modules/.bin/playwright-core" install --with-deps chromium
+          npm run check:layout
           npm run check:versions
           npm run check:kit
           npm run check:ask
           npm run check:machine
           npm run check:chatgpt
           python3 scripts/build-chatgpt-plugin.py --marketplace
+          node scripts/check-layout.mjs marketplace/visual-explainer/skills/visual-explainer
           python3 - <<'PY'
           import json
           from pathlib import Path

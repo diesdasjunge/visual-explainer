@@ -9,7 +9,8 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 import { prepareRenderedHtml, readSourcePath, renderPageForHost, reportLine, reportPage } from "../kit/render.mjs";
-import { lookAt, lookLines } from "../kit/look.mjs";
+import { lookLines } from "../kit/look.mjs";
+import { validateFile } from "../kit/validation.mjs";
 
 const serverPath = fileURLToPath(import.meta.url);
 const mcpDir = dirname(serverPath);
@@ -46,6 +47,13 @@ const renderInputSchema = z.object({
 }).strict();
 
 const renderOutputSchema = z.object({
+  validation: z.object({
+    schema: z.number(), file: z.string(), sha256: z.string(), ready: z.boolean(),
+    automated: z.enum(["passed", "failed", "unverified"]), reason: z.string().optional(),
+    problems: z.array(z.string()),
+    visualReview: z.object({ status: z.string() }).passthrough(),
+    evidence: z.array(z.object({ path: z.string(), sha256: z.string() }).passthrough()),
+  }),
   path: z.string(),
   viewer: viewerSchema,
   openAttempted: z.boolean(),
@@ -305,7 +313,7 @@ async function writeRenderedHtml(filenameInput, htmlInput, open, viewer, planRoo
   }
   writeRenderedFile(outputPath, html);
   // a kit page is looked at in a browser, and its sheet comes back with the report, so the agent never scripts its own screenshots
-  const looked = page?.kit ? await lookAt(outputPath) : undefined;
+  const looked = await validateFile(outputPath);
 
   const openResult = open ? await openRenderedPage(outputPath, viewer) : { openAttempted: false, openStatus: "disabled" };
   let message = `Wrote ${outputPath}.`;
@@ -321,10 +329,10 @@ async function writeRenderedHtml(filenameInput, htmlInput, open, viewer, planRoo
   }
   if (page) message += page.note;
   if (report) message += `\n${reportLine(report)}`;
-  if (looked) message += `\n${lookLines(looked).join("\n")}`;
+  if (looked) message += `\n${lookLines(looked).join("\n")}\nValidation receipt: ${outputPath}.validation.json`;
   const images = (looked?.sheets ?? []).map((sheet) => ({ type: "image", data: readFileSync(sheet).toString("base64"), mimeType: "image/png" }));
 
-  return { message, output: compact({ path: outputPath, viewer, ...openResult, source, report }), images };
+  return { message, output: compact({ path: outputPath, viewer, ...openResult, source, report, validation: looked.validation }), images };
 }
 
 function registerResources(server) {
@@ -387,7 +395,7 @@ function registerTools(server) {
 
   server.registerTool("visual_explainer_render_html", {
     title: "Render Visual Explainer HTML",
-    description: "Render a page source (path) or HTML to the configured output directory (default ~/.agent/diagrams/). Does not call an LLM.",
+    description: "Render and validate a draft HTML artifact. Returns validation.ready=false until the agent inspects all evidence and records a review through kit/validation.mjs. Does not call an LLM.",
     inputSchema: renderInputSchema,
     outputSchema: renderOutputSchema,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },

@@ -258,15 +258,17 @@ async function main() {
   writeFileSync(temp, result.kit ? prepareRenderedHtml(result.html) : result.html);
   renameSync(temp, output);
   console.log(`✓ ${resolve(output)}  ${summary}${result.warnings.length ? ` · ${result.warnings.length} warning(s)` : ""}${report}`);
-  // a kit page is looked at in a browser, so the agent reads one report and one sheet instead of scripting its own screenshots
-  if (result.kit && !hasPlan(source) && !flag("--no-check")) {
-    const { lookAt, lookLines } = await import("./look.mjs");
-    const looked = await lookAt(output);
+  const { validateFile, recordValidation } = await import("./validation.mjs");
+  if (flag("--no-check")) {
+    recordValidation(output, { skipped: "Draft render requested with --no-check", problems: [], sheets: [] });
+    console.log("UNVERIFIED draft: browser checks and visual review are required before delivery.");
+    process.exitCode = 2;
+  } else {
+    const { lookLines } = await import("./look.mjs");
+    const looked = await validateFile(output);
     for (const line of lookLines(looked)) console.log(`  ${line}`);
-    if (looked.problems.length) {
-      console.log(`✗ ${looked.problems.length} visual problem(s); the page was written. Fix them and render again.`);
-      process.exitCode = 1;
-    }
+    console.log(`Review receipt: ${resolve(output)}.validation.json`);
+    process.exitCode = looked.validation.automated === "failed" ? 1 : 2;
   }
   if (flag("--open")) openFile(resolve(output));
 }

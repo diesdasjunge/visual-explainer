@@ -1,0 +1,25 @@
+name: Layout guards
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: |
+          npm install --prefix "$RUNNER_TEMP/ve-browser" --no-save --ignore-scripts playwright-core@1.63.0
+          export VE_BROWSER_RUNTIME="$RUNNER_TEMP/ve-browser"
+          "$VE_BROWSER_RUNTIME/node_modules/.bin/playwright-core" install --with-deps chromium
+          npm run check:versions
+          npm run check:kit
+          npm run check:ask
+          npm run check:machine
+          npm run check:chatgpt
+          npm run check:layout
+          python3 scripts/build-chatgpt-plugin.py --marketplace
+          node scripts/check-layout.mjs marketplace/visual-explainer/skills/visual-explainer

@@ -79,7 +79,7 @@ visually,” or “Turn this plan into a step-by-step diagram.” ChatGPT receiv
 instructions for downloadable artifact links; Codex uses a writable workspace
 or host visualization directory. The renderer needs Node; the skill explains
 how to deliver standalone HTML when Node is unavailable. HTML slides are
-included; PPTX, video, and browser layout checks need optional dependencies.
+included. Finished HTML delivery requires the browser runtime and recorded visual review; PPTX and video have additional optional dependencies. See [mandatory validation](plugins/visual-explainer/references/validation.md).
 
 Light and dark icons use the existing cube motif with teal, paper, and copper
 colors. The fork's package keeps upstream author attribution. See
@@ -107,7 +107,7 @@ Every coding agent defaults to ASCII art when you ask for a diagram. Box-drawing
 
 Tables are worse. Ask the agent to compare 15 requirements against a plan and you get a wall of pipes and dashes that wraps and breaks in the terminal. The data is there but it's painful to read.
 
-This skill fixes that. Real typography, dark/light themes, hand-drawn diagrams that animate and respond to the reader. Normal skill use has no build step and no dependency beyond a browser; optional MCP and PPTX utilities use small Node dependencies.
+This skill fixes that. Real typography, dark/light themes, hand-drawn diagrams that animate and respond to the reader. HTML validation requires Node, Playwright and a browser; optional MCP and PPTX utilities use small Node dependencies.
 
 <img src="replay.gif" alt="A job queue drawn as a state machine and replayed one event at a time: five jobs pile into the queue, two workers take jobs, a timed-out job lights the retry route back to the end of the queue, the queue drains, then jobs flow through the full picture" width="720">
 
@@ -616,7 +616,7 @@ plugins/
         └── slide-deck.html (slide engine + reference deck)
 ```
 
-**Output:** `~/.agent/diagrams/filename.html` by default (native Pi can configure the directory above) → opens in browser. The agent writes a short source, `filename.src.html`, that links the shared kit; the renderer builds the page from it and keeps it for small revisions. When Chrome and `playwright-core` are available, the renderer also checks the page in a browser and writes `filename.sheet.png`, a contact sheet of the first screen, the figures, and every step, which the agent looks at instead of taking its own screenshots. On request, the agent also writes `filename.md` as an AI-readable companion; it asks before replacing one. In Pi, agents can offer `visual_explainer` `prepare` after a substantial plan, architecture, diff, or implementation, then `render` to write and open the page. MCP hosts use the `visual-explainer-mcp` stdio server, whose render tool defaults to `open: false`.
+**Output:** `~/.agent/diagrams/filename.html` by default (native Pi can configure the directory above) → opens in browser. The agent writes a short source, `filename.src.html`, that links the shared kit; the renderer builds the page from it and keeps it for small revisions. The renderer requires browser validation and writes viewport evidence covering the complete page at three widths in both themes, plus diagram crops. Every render remains unverified until the agent inspects the evidence and records a review bound to the HTML and image hashes. Missing browser dependencies block finished delivery. See [validation setup and exit codes](plugins/visual-explainer/references/validation.md). On request, the agent also writes `filename.md` as an AI-readable companion; it asks before replacing one. In Pi, agents can offer `visual_explainer` `prepare` after a substantial plan, architecture, diff, or implementation, then `render` to write and open the page. MCP hosts use the `visual-explainer-mcp` stdio server, whose render tool defaults to `open: false`.
 
 Pages are figure-first: the first screen shows the answer as a picture and one sentence. Each page uses one of four registers (Instrument for reviews and metrics, Blueprint for architecture, Paper for concepts, Editorial for recaps and decks), each with fixed fonts, a contrast-checked palette, and one shared spacing and type scale. Terms in the text and parts of the figure light up together on hover. Diagrams are hand-drawn inline SVG, so they match the page and can step through a process. Mermaid is used only when you ask for it. Tables carry status chips, metrics get bars and sparklines, and prose follows a Simplified Technical English style.
 

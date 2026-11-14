@@ -76,7 +76,8 @@ with tempfile.TemporaryDirectory(prefix="visual-explainer-plugin-") as temp:
     source = temp / "demo.src.html"
     source.write_text(SOURCE)
     renderer = str(skill / "kit/render.mjs")
-    rendered = run("node", renderer, str(source), "--no-check")
+    rendered = run("node", renderer, str(source), "--no-check", ok=False)
+    assert rendered.returncode == 2, "Draft render must remain unverified"
     page = source.with_name("demo.html")
     html = page.read_text()
     elements = Elements(html).elements

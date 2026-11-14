@@ -6,7 +6,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import type { AgentToolResult, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { prepareRenderedHtml, readSourcePath, renderPageForHost, reportLine, reportPage } from "./kit/render.mjs";
-import { lookAt, lookLines } from "./kit/look.mjs";
+import { lookLines } from "./kit/look.mjs";
+import { validateFile } from "./kit/validation.mjs";
 
 type VisualExplainerParams = {
   action: "prepare" | "render";
@@ -398,7 +399,7 @@ async function writeRenderedHtml(
 
   signal?.throwIfAborted();
   // a kit page is looked at in a browser, and its sheet comes back with the report, so the agent never scripts its own screenshots
-  const looked = page?.kit ? await lookAt(outputPath) : undefined;
+  const looked = await validateFile(outputPath);
   signal?.throwIfAborted();
 
   // a plan page or a kit page can send the reader's reply back; an ordinary page has no script to send it
@@ -426,7 +427,7 @@ async function writeRenderedHtml(
   }
   if (page) message += page.note;
   if (report) message += `\n${reportLine(report)}`;
-  if (looked) message += `\n${lookLines(looked).join("\n")}`;
+  if (looked) message += `\n${lookLines(looked).join("\n")}\nValidation receipt: ${outputPath}.validation.json`;
   if (listener && openResult.openTarget === "glimpse" && openResult.openStatus === "dispatched") {
     message += page?.kit ? "\nThe reader may reply; it arrives here as a message." : " When the reader presses Send to agent, their response arrives here as a message; wait for it.";
   }
@@ -436,7 +437,7 @@ async function writeRenderedHtml(
       { type: "text" as const, text: message },
       ...(looked?.sheets ?? []).map((sheet: string) => ({ type: "image" as const, data: readFileSync(sheet).toString("base64"), mimeType: "image/png" })),
     ],
-    details: { action: "render", path: outputPath, viewer, ...openResult, ...(source ? { source } : {}), ...(report ? { report } : {}), ...(looked && !looked.skipped ? { problems: looked.problems, sheets: looked.sheets } : {}) },
+    details: { action: "render", path: outputPath, viewer, ...openResult, ...(source ? { source } : {}), ...(report ? { report } : {}), validation: looked.validation, problems: looked.problems, sheets: looked.sheets },
   };
 }
 

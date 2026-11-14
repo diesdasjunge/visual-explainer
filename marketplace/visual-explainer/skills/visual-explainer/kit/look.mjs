@@ -1,28 +1,29 @@
 // Opens a rendered kit page in headless Chrome and looks at it the way a reader would, so the agent does not script its own browser:
 // script errors, sideways scrolling, labels under 12 px, text that overlaps or runs out of its drawing, headings that sit on what
-// follows, every stepper step, and a contact sheet of the first screen, the figures, and the steps. playwright-core is an optional peer.
+// follows, every stepper step, and viewport evidence of the complete page and steps. Browser validation is required for delivery.
+import { layoutGuards } from "./layout-guards.mjs";
 import { createRequire } from "node:module";
 import { readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 
-const WIDTHS = [390, 1280];
+const WIDTHS = [390, 1067, 1280];
 const MIN_LABEL = 12;
 const MIN_HEADING_GAP = 8;
 // ≈1.15 megapixels, the most a model takes in before it scales an image down
 const SHEET_W = 1200, SHEET_H = 960, PAD = 16, GAP = 12, LABEL = 22, MAX_SHEETS = 3;
-// a font still downloading after load must not hold the render; a late font only shifts glyphs slightly
-const fontsReady = () => Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 5000))]);
+// Bound the wait, but fail validation rather than approving geometry before fonts settle.
+const fontsReady = () => Promise.race([document.fonts.ready, new Promise((_, reject) => setTimeout(() => reject(new Error("Fonts did not settle")), 5000))]);
 
 async function launch() {
   let chromium;
   try {
-    ({ chromium } = await import("playwright-core"));
+    ({ chromium } = process.env.VE_BROWSER_RUNTIME
+      ? createRequire(resolve(process.env.VE_BROWSER_RUNTIME, "package.json"))("playwright-core")
+      : await import("playwright-core"));
   } catch (e) {
-    if (e.code !== "ERR_MODULE_NOT_FOUND") throw e;
-    // import() never looks in global installs, so it goes beside the plugin
-    const plugin = dirname(dirname(fileURLToPath(import.meta.url)));
-    return { skipped: `playwright-core is not installed. Run: npm install --no-save --prefix "${plugin}" playwright-core (in a repository checkout, npm install is enough)` };
+    if (!["ERR_MODULE_NOT_FOUND", "MODULE_NOT_FOUND"].includes(e.code)) throw e;
+    return { skipped: 'Browser runtime unavailable. Install playwright-core@1.63.0 in a writable runtime directory and set VE_BROWSER_RUNTIME to that directory; never install into the plugin cache.' };
   }
   try {
     return { browser: await chromium.launch() };
@@ -30,7 +31,7 @@ async function launch() {
     try {
       return { browser: await chromium.launch({ channel: "chrome" }) };
     } catch {
-      const { version } = createRequire(import.meta.url)("playwright-core/package.json");
+      const version = "1.63.0";
       return { skipped: `no browser started (${e.message.split("\n")[0]}). Install Google Chrome, or run: npx playwright-core@${version} install chromium-headless-shell` };
     }
   }
@@ -58,6 +59,7 @@ function measure(minLabel) {
     unfilled: unfilled.length ? { n: unfilled.length, text: unfilled[0].textContent.trim().slice(0, 40) } : null,
     figures: document.querySelectorAll("figure").length,
     prose,
+    kitExpected: !!document.querySelector("style[data-ve-kit]"),
     kit: document.documentElement.dataset.veKit === "ready",
   };
 }
@@ -180,7 +182,9 @@ function headings(minGap) {
   for (const h of document.querySelectorAll("main h2")) {
     const block = h.parentElement.matches(".sec-head") ? h.parentElement : h;
     const next = block.nextElementSibling;
-    if (!next || !next.checkVisibility()) continue;
+    if (!h.checkVisibility() || !next || !next.checkVisibility()) continue;
+    const hb = h.getBoundingClientRect(), nb = next.getBoundingClientRect();
+    if (Math.min(hb.right, nb.right) <= Math.max(hb.left, nb.left)) continue;
     const gap = next.getBoundingClientRect().top - h.getBoundingClientRect().bottom;
     if (gap < minGap) found.push(`the heading "${h.textContent.trim().replace(/\s+/g, " ").slice(0, 40)}" sits ${Math.max(0, Math.round(gap))} px from the ${next.tagName.toLowerCase()} below it`);
   }
@@ -269,12 +273,13 @@ async function drawSheets(browser, sheets, outBase) {
  * Looks at a rendered page. Returns { problems, sheets, widths, errors } or { skipped } when there is no browser.
  * With `sheet`, writes <name>.sheet.png (and -2, -3 … when one would be too small to read) beside the page, replacing older ones.
  */
-export async function lookAt(file, { sheet = true } = {}) {
-  const got = await launch();
+export async function lookAt(file, { sheet = true, launcher = launch } = {}) {
+  let got;
+  try { got = await launcher(); } catch (e) { got = { skipped: e.message }; }
   if (got.skipped) return { skipped: got.skipped, problems: [], sheets: [] };
   const { browser } = got;
   const path = resolve(file), url = pathToFileURL(path).href;
-  const result = { file: path, errors: [], widths: {}, problems: [], sheets: [], omitted: 0 };
+  const result = { file: path, errors: [], widths: {}, problems: [], sheets: [], evidenceDetails: {}, omitted: 0 };
   const geometry = new Map();
   const note = (list, step) => {
     for (const { where, what } of list) {
@@ -285,8 +290,8 @@ export async function lookAt(file, { sheet = true } = {}) {
   };
   try {
     // as a reader opens it, at each width
-    for (const width of WIDTHS) {
-      const page = await browser.newPage({ viewport: { width, height: 900 } });
+    for (const theme of ["light", "dark"]) for (const width of WIDTHS) {
+      const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: theme, reducedMotion: "reduce" });
       page.on("console", (m) => {
         if (m.type() !== "error") return;
         // an offline or blocked fetch from another origin (the kit's web font) is the host's situation, not the page's
@@ -297,7 +302,34 @@ export async function lookAt(file, { sheet = true } = {}) {
       await page.goto(url, { waitUntil: "load", timeout: 15000 });
       await page.evaluate(fontsReady);
       await page.waitForTimeout(300);
-      result.widths[width] = await page.evaluate(measure, MIN_LABEL);
+      const metrics = await page.evaluate(measure, MIN_LABEL);
+      result.widths[width] = metrics;
+      const stateChecks = async (state) => {
+        const label = `${width}px ${theme} ${state}`;
+        const m = await page.evaluate(measure, MIN_LABEL);
+        if (m.overflow) result.problems.push(`${label}: page-overflow: the page scrolls sideways`);
+        if (m.small) result.problems.push(`${label}: diagram label below ${MIN_LABEL}px`);
+        note(await page.evaluate(inspect, null), label);
+        result.problems.push(...(await page.evaluate(layoutGuards)).map(p => `${label}: ${p}`));
+        result.problems.push(...(await page.evaluate(headings, MIN_HEADING_GAP)).map(p => `${label}: ${p}`));
+        if (sheet) {
+          // Viewport-sized tiles preserve readable text, actual clipping and ordinary below-fold content.
+          const height = await page.evaluate(() => document.documentElement.scrollHeight);
+          for (let y = 0; y < height; y += 800) {
+            await page.evaluate(y => scrollTo(0,y), y);
+            const evidence = `${path.replace(/\.html?$/i, "")}.view-${result.sheets.length + 1}.png`;
+            await page.screenshot({ path: evidence }); result.sheets.push(evidence);
+            result.evidenceDetails[evidence] = { width, theme, state, scrollY: await page.evaluate(() => scrollY), kind: "viewport" };
+          }
+          await page.evaluate(() => scrollTo(0,0));
+        }
+      };
+      await stateChecks("initial");
+      const counts = await page.locator(".ve-steps").evaluateAll(es => es.map(e => e.querySelectorAll(".ve-cap li").length));
+      for (let r = 0; r < counts.length; r++) for (let k = 0; k < counts[r]; k++) {
+        if (!await page.evaluate(goStep, [r,k])) throw new Error(`Cannot inspect step ${r}:${k}`);
+        await page.waitForTimeout(60); await stateChecks(`stepper ${r+1} step ${k+1}`);
+      }
       await page.close();
     }
 
@@ -390,12 +422,12 @@ export async function lookAt(file, { sheet = true } = {}) {
       const own = new RegExp(`^${basename(outBase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.sheet(?:-\\d+)?\\.png$`);
       for (const f of readdirSync(dirname(path))) if (own.test(f)) rmSync(join(dirname(path), f));
       const { sheets, omitted } = layout(items);
-      result.sheets = await drawSheets(browser, sheets, outBase);
+      result.sheets.push(...await drawSheets(browser, sheets, outBase));
       result.omitted = omitted;
     }
   } catch (e) {
-    // the page is already written; a browser failure is a skipped check, not a failed render
-    return { skipped: `the visual check could not finish: ${String(e.message).split("\n")[0]}`, problems: [], sheets: [] };
+    // Preserve partial findings, but an incomplete check can never establish readiness.
+    return { ...result, problems: [...result.problems, ...result.errors, ...geometry.keys()], skipped: `the visual check could not finish: ${String(e.message).split("\n")[0]}` };
   } finally {
     await browser.close();
   }
@@ -406,7 +438,7 @@ export async function lookAt(file, { sheet = true } = {}) {
     ...result.errors,
     ...WIDTHS.filter((w) => at[w].overflow).map((w) => `the page scrolls sideways at ${w}px`),
     ...WIDTHS.filter((w) => at[w].small).map((w) => `a diagram label renders at ${at[w].smallest.px}px at ${w}px ("${at[w].smallest.text}"); keep labels at ${MIN_LABEL}px or more`),
-    ...(at[1280].kit ? [] : ["the kit's script did not run to its end"]),
+    ...(at[1280].kitExpected && !at[1280].kit ? ["the kit's script did not run to its end"] : []),
     ...(at[1280].unfilled ? [`${at[1280].unfilled.n} SVG label(s) have no fill, so they are black on a dark scheme ("${at[1280].unfilled.text}"); use a kit class or a token`] : []),
     ...result.problems,
     ...shapes,
@@ -416,11 +448,11 @@ export async function lookAt(file, { sheet = true } = {}) {
 
 /** The lines every host prints after a render: problems as ✗, or the smallest label; then the sheet to look at. */
 export function lookLines(r) {
-  if (r.skipped) return [`Visual check skipped: ${r.skipped}`];
+  if (r.skipped) return [`UNVERIFIED: browser check incomplete: ${r.skipped}`];
   const shown = r.problems.slice(0, 12);
   const lines = shown.length
     ? [...shown.map((p) => `✗ ${p}`), ...(r.problems.length > shown.length ? [`✗ … and ${r.problems.length - shown.length} more`] : [])]
-    : [`✓ Visual check: no problems · smallest label ${WIDTHS.map((w) => `${r.widths[w].smallest?.px ?? "—"}px at ${w}`).join(", ")}`];
+    : [`Automated geometry passed; visual review REQUIRED · smallest label ${WIDTHS.map((w) => `${r.widths[w].smallest?.px ?? "—"}px at ${w}`).join(", ")}`];
   if (r.sheets.length) lines.push(`Look at: ${r.sheets.join(", ")}${r.omitted ? ` (${r.omitted} more crops left out)` : ""}`);
   return lines;
 }
