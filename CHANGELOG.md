@@ -1,3 +1,9 @@
+## 0.15.10 — explain transformations before modules
+
+- Require a concrete transformation before module inventories in system explanations.
+- Keep the main explanatory path readable in narrow host panes; reserve wide scrolling diagrams for optional detail.
+- Add visual-review criteria for meaningful replay changes and labels at their actual displayed size.
+
 ## 0.15.9 — composition-safe layout and navigation
 
 - Give header/figure compositions positive spacing in both grids and nested sections; detect figures overlapping their introductions.

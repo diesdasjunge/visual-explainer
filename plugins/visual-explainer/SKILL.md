@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a browser to view generated HTML files. Optional surf-cli for AI image generation.
 metadata:
   author: nicobailon
-  version: "0.15.9"
+  version: "0.15.10"
 ---
 
 # Visual Explainer
@@ -32,12 +32,13 @@ Before writing or rendering in ChatGPT or Codex, read `references/chatgpt.md`. I
 1. **One claim per figure.** Each figure in `<figure>`; the `<figcaption>` states the claim in one sentence.
 2. **Figures lead, words label.** Most sections open with a figure; reasoning and trade-offs may lead with text. About a short paragraph of prose per screen. A sentence that describes the picture becomes a label in it.
 3. **First viewport = the answer:** the main idea as a picture plus one sentence (for a concept, the question and the picture that frames it). No decorative hero.
-4. **Draw the mechanism, not the name.** A request path through a cache, not a box labeled "cache". Every arrow gets a verb: `writes`, `polls 30s`.
-5. **Draw the difference.** Show the edge or box each option adds or removes.
-6. **Encode state in form:** shape, position, and pattern, plus color. Never color alone.
-7. **Every number gets a picture.** A span in the drawing (a wait, a size, a window) gets a dimension line; other numbers get a waffle, bars, or sparkline beside them, and a trend a line chart.
-8. **Cases become small multiples:** the same mini diagram once per case, not a table of sentences.
-9. **Give every fact a place** in a figure (label, edge verb, dimension, callout, caption) before it becomes a sentence.
+4. **Follow a transformation.** For a system explanation, show one representative input changing into an output before introducing module names. Label invented example values as illustrative.
+5. **Draw the mechanism, not the name.** A request path through a cache, not a box labeled "cache". Every arrow gets a verb: `writes`, `polls 30s`.
+6. **Draw the difference.** Show the edge or box each option adds or removes.
+7. **Encode state in form:** shape, position, and pattern, plus color. Never color alone.
+8. **Every number gets a picture.** A span in the drawing (a wait, a size, a window) gets a dimension line; other numbers get a waffle, bars, or sparkline beside them, and a trend a line chart.
+9. **Cases become small multiples:** the same mini diagram once per case, not a table of sentences.
+10. **Give every fact a place** in a figure (label, edge verb, dimension, callout, caption) before it becomes a sentence.
 
 Shape the page to the content; merge, reorder, or drop sections.
 

@@ -21,6 +21,8 @@ y:210                  ┌──▼───┐
 - At least 40 units between boxes. Orthogonal edges (`M x y H x V y`). Labels 9 units above their line.
 - SVG text does not wrap: lines of about 18 characters, `<tspan x=".." dy="1.2em">` for a second line.
 - A boundary (process, network, trust zone) is a dashed `rect.ve-bnd` with a `text.ve-bnd-t` label in its top-left corner.
+- The primary explanatory path must be understandable in the host's narrow pane without horizontal scrolling. Use a compact overview, responsive HTML panels with local SVGs, or successive scenes. Reserve wide scrolling drawings for optional detail; never shrink labels to fit. Keep the same meaningful question targets and animation when reflowing.
+- A module inventory is not a mechanism: draw the changing value, interval, connection or state inside the stages. Move implementation names and exception lists into expandable notes.
 - Over about 12 nodes, draw a 5–8 node overview and put the detail in cards or a second figure.
 - Sequence: one column per actor with a thin lifeline, time runs down, each arrow labeled with its call. Schema: one box per table with its key fields in mono, crow's-foot ends for many.
 
