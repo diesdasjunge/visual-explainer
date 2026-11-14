@@ -1,0 +1,68 @@
+name: Sync upstream
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.repository == 'diesdasjunge/visual-explainer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Merge upstream into a candidate
+        id: merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch https://github.com/nicobailon/visual-explainer.git main
+          if git merge-base --is-ancestor FETCH_HEAD HEAD; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'Already up to date.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if ! git merge --no-commit --no-ff FETCH_HEAD; then
+            echo 'Upstream merge conflicts require manual resolution. Main was not changed.' >> "$GITHUB_STEP_SUMMARY"
+            git diff --name-only --diff-filter=U >> "$GITHUB_STEP_SUMMARY"
+            git merge --abort
+            exit 1
+          fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+      - name: Validate the plugin candidate
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          set -eu
+          npm run check:versions
+          npm run check:kit
+          npm run check:ask
+          npm run check:machine
+          npm run check:chatgpt
+          npm run build:chatgpt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('plugin.json').read_text())
+          assert p['extensions']['com.openai']['interface']['displayName'] == 'Visual Explainer'
+          assert 'references/chatgpt.md' in Path('plugins/visual-explainer/SKILL.md').read_text()
+          m = json.loads(Path('.agents/plugins/marketplace.json').read_text())
+          assert m['name'] == 'kiryll-visual-explainer'
+          PY
+      - name: Publish validated merge
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          git commit -m 'Sync validated upstream changes'
+          git push origin HEAD:main
+          echo 'Merged upstream after plugin checks passed.' >> "$GITHUB_STEP_SUMMARY"

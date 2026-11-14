@@ -42,8 +42,20 @@ See [OpenAI’s GitHub sync documentation](https://learn.chatgpt.com/docs/enterp
 
 Publish changes by committing and pushing to this fork's `main` branch.
 Bump plugin release versions together before a plugin release; run the checks
-below and `npm run check:versions`. Upstream changes must first be merged into
-this fork: subscribing to this marketplace does not automatically merge upstream.
+below and `npm run check:versions`.
+
+The `Sync upstream` GitHub Actions workflow checks upstream `main` daily at
+05:23 UTC and can also be run manually. It merges into a candidate, runs the
+upstream and package checks, and pushes to this fork only if they pass.
+Conflicts (including overlapping release-version edits) and failed checks stop
+the run without changing `main`; resolve those manually in the Actions report.
+It never force-pushes or discards fork changes. GitHub may delay scheduled runs
+or disable schedules after repository inactivity; check Actions if updates stop.
+
+This workflow updates the GitHub source only. It does not upload a new release
+to the separate personal ChatGPT plugin. Personal accounts can use the local
+Git marketplace in Codex, or update their account plugin through Plugin Creator.
+The documented daily cloud GitHub sync requires a workspace admin import.
 
 ### Build an archive
 
